@@ -1,10 +1,8 @@
 --- #config for channel breakout
-source: testdata
-testdatafile: ~/crypto/breakout/gettestdata/testdata.txt #this will be used for all data with some random variation
-intervals: [1,360] #in minutes, any number of entries, ensure all elements are multiples of the smallest element
-daysofdatainmemory: [2,30] #number of days worth to examine; matches the list of intervals element-by-element
-minnummaximaforchannel: [4,4] #the minimum number of MAXIMA  for a sequence to be considered as a channel
-minnumproponoutsidechannel: [0.05,0.05] #by how much does the price have to exceed the maximum to be considered a breakout
-minnumpointsoutsidechannel: [1,1] #how many points (which satisfy the minimum proportion condition) outside the channel are considered a breakout
-maxnumpointsoutsidechannel: [4,4] #if it's this many periods outsie the channel already then ignore it
-coinlist: ./coins_binance.txt #list of coins to use, ignore any outside this list; use "none" (but without the quotes) if there is no list
+interval:      15
+sigincrease:   0.03
+signumincs:    2
+minrunlen:     7
+maxexceptions: 1
+corridor:      0.03
+coinlist:      ./coins_binance.txt
