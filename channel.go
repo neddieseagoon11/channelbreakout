@@ -15,13 +15,13 @@ import (
 )
 
 type configData struct {
-	Interval      int     //minutes
-	SigIncrease   float64 //increase (proportion) over interval that is considered significant
-	SigNumIncs    int     //Number of consecutive recent significant increases that is considered significant
-	MinRunLen     int     //minimum number of intervals within corridor i.e. how long should it have "wobbled about" before breaking upwards
-	MaxExceptions int     //in the preceding, we are allowed this number of exceptions
-	Corridor      float64 //corridor size as proportion of the price sigNumIncs intervals back
-	Coinlist      string  //file name
+	Intervals      []int     //minutes
+	SigIncreases   []float64 //increase (proportion) over interval that is considered significant
+	SigNumIncss    []int     //Number of consecutive recent significant increases that is considered significant
+	MinRunLens     []int     //minimum number of intervals within corridor i.e. how long should it have "wobbled about" before breaking upwards
+	MaxExceptionss []int     //in the preceding, we are allowed this number of exceptions
+	Corridors      []float64 //corridor size as proportion of the price sigNumIncs intervals back
+	Coinlist       string    //file name
 }
 
 type coin struct {
@@ -37,6 +37,7 @@ func newCoin(name string) *coin {
 }
 
 func main() {
+	fmt.Println("Channel Breakout V1.2")
 	//read configuration (yaml)
 	var config configData
 	data, err := os.ReadFile("config.yaml")
@@ -63,7 +64,7 @@ func main() {
 		}
 	}
 
-	tick := config.Interval //minutes
+	tick := config.Intervals[0] //minutes
 
 	//set up request
 	client := &http.Client{}
@@ -102,31 +103,34 @@ func main() {
 				first = false
 				fmt.Println(time.Now().String(), len(inter4), "coins")
 			}
-			if np >= config.SigNumIncs+config.MinRunLen+1 {
-				interesting := true
-				for counter := np - 1; counter > np-config.SigNumIncs-1; counter-- { //gone up recently?
-					interesting = interesting && (data[counter]/data[counter-1]-1 > config.SigIncrease)
-				}
-				if !interesting {
-					continue //next coin
-				}
-				prevMax := data[np-config.SigNumIncs-1] //look at a corridor relative to this
-				lenOfRun := 0
-				numExcepts := 0
-				for counter := np - config.SigNumIncs - 2; counter >= 0; counter-- {
-					if data[counter] > (1+config.Corridor)*prevMax || data[counter] < (1-config.Corridor)*prevMax { //check for outside corridor
-						numExcepts++
-						if numExcepts > config.MaxExceptions {
-							interesting = false
-							break
-						}
-					} else {
-						lenOfRun++
+			for cond := 0; cond < len(config.Intervals); cond++ { //loop through tests
+				step := config.Intervals[cond] / config.Intervals[0]
+				if np >= step*(config.SigNumIncss[cond]+config.MinRunLens[cond])+1 {
+					interesting := true
+					for counter := np - 1; counter > np-config.SigNumIncss[cond]*step-1; counter -= step { //gone up recently?
+						interesting = interesting && (data[counter]/data[counter-step]-1 > config.SigIncreases[cond])
 					}
-				}
-				interesting = interesting && (lenOfRun >= config.MinRunLen)
-				if interesting {
-					fmt.Println(k, lenOfRun)
+					if !interesting {
+						continue //next test
+					}
+					prevMax := data[np-config.SigNumIncss[cond]*step-1] //look at a corridor relative to this
+					lenOfRun := 0
+					numExcepts := 0
+					for counter := np - (config.SigNumIncss[cond]+1)*step - 1; counter >= 0; counter -= step {
+						if data[counter] > (1+config.Corridors[cond])*prevMax || data[counter] < (1-config.Corridors[cond])*prevMax { //check for outside corridor
+							numExcepts++
+							if numExcepts > config.MaxExceptionss[cond] {
+								interesting = false
+								break
+							}
+						} else {
+							lenOfRun++
+						}
+					}
+					interesting = interesting && (lenOfRun >= config.MinRunLens[cond])
+					if interesting {
+						fmt.Println("Coin", k, "Test Condition", cond+1, "Run Length", lenOfRun)
+					}
 				}
 			}
 		}

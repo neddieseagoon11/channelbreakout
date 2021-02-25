@@ -1,8 +1,8 @@
---- #config for channel breakout
-interval:      15
-sigincrease:   0.03
-signumincs:    2
-minrunlen:     7
-maxexceptions: 1
-corridor:      0.03
+--- #config for channel breakout V2
+intervals:     [15,15,30,60,120,60,60,60,60]
+sigincreases:   [0.025,0.04,0.05,0.06,0.08,0.025,0.02,0.0125,0.04]
+signumincss:    [2,1,1,1,1,3,4,6,1]
+minrunlens:    [5,0,0,0,0,0,0,0,3]
+maxexceptionss: [1,9999,9999,9999,9999,9999,9999,9999,0]
+corridors:     [0.03,9999,9999,9999,9999,9999,9999,9999,0.01]
 coinlist:      ./coins_binance.txt
