@@ -85,6 +85,7 @@ func main() {
 		inter2 := inter1.(map[string]interface{})
 		inter3 := inter2["data"]
 		inter4 := inter3.(map[string]interface{})
+		first := true
 		for xk, xcurr := range inter4 {
 			curr := xcurr.(map[string]interface{})
 			xquote := curr["quote"]
@@ -97,6 +98,10 @@ func main() {
 			data[prices[k].NumPoints] = price
 			prices[k].NumPoints++
 			np := prices[k].NumPoints
+			if first {
+				first = false
+				fmt.Println(time.Now().String(), len(inter4), "coins")
+			}
 			if np >= config.SigNumIncs+config.MinRunLen+1 {
 				interesting := true
 				for counter := np - 1; counter > np-config.SigNumIncs-1; counter-- { //gone up recently?
@@ -105,10 +110,10 @@ func main() {
 				if !interesting {
 					continue //next coin
 				}
-				prevMax := data[np-config.SigNumIncs] //look at a corridor relative to this
+				prevMax := data[np-config.SigNumIncs-1] //look at a corridor relative to this
 				lenOfRun := 0
 				numExcepts := 0
-				for counter := np - config.SigNumIncs - 1; counter >= 0; counter-- {
+				for counter := np - config.SigNumIncs - 2; counter >= 0; counter-- {
 					if data[counter] > (1+config.Corridor)*prevMax || data[counter] < (1-config.Corridor)*prevMax { //check for outside corridor
 						numExcepts++
 						if numExcepts > config.MaxExceptions {
